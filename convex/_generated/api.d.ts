@@ -9,6 +9,7 @@
  */
 
 import type * as ai from "../ai.js";
+import type * as cloudinary from "../cloudinary.js";
 import type * as reports from "../reports.js";
 import type * as whatsapp from "../whatsapp.js";
 
@@ -20,6 +21,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
+  cloudinary: typeof cloudinary;
   reports: typeof reports;
   whatsapp: typeof whatsapp;
 }>;

@@ -1,73 +1,194 @@
-# React + TypeScript + Vite
+# UrbanCleaner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript application for reporting and managing urban cleanliness issues with WhatsApp integration.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+UrbanCleaner enables citizens to report cleanliness issues in their cities through a simple interface, with automated processing via AI and notifications through WhatsApp.
 
-## React Compiler
+## Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```mermaid
+flowchart TB
+    subgraph UrbanCleanerSystem["UrbanCleaner System"]
+        direction TB
+        WebInterface[Web Interface<br/>React/Vite SPA]:::component
+        Backend[Backend<br/>Convex serverless functions]:::component
+        Database[(Database<br/>Stores reports and user data)]:::database
+    end
+    
+    Citizen[Citizen]:::person
+    AIService[AI Service<br/>Processes images]:::external
+    WhatsApp[WhatsApp API<br/>Sends notifications]:::external
+    
+    Citizen -->|Submits reports with photos| WebInterface
+    WebInterface -->|Sends report data| Backend
+    Backend -->|Stores/retrieves data| Database
+    Backend -->|Requests image processing| AIService
+    AIService -->|Returns analysis results| Backend
+    Backend -->|Sends notifications| WhatsApp
+    WhatsApp -->|Sends confirmation/update| Citizen
+    
+    classDef person fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef component fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef database fill:#bfb,stroke:#333,stroke-width:2px;
+    classDef external fill:#f99,stroke:#333,stroke-width:2px;
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Data Flow
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```mermaid
+sequenceDiagram
+    participant User as Citizen
+    participant UI as Web Interface
+    participant API as Convex Backend
+    participant DB as Database
+    participant AI as AI Service
+    participant WA as WhatsApp
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+    User->>UI: Submit report with photo
+    UI->>API: POST /api/reports
+    API->>DB: Store initial report
+    API->>AI: Send image for analysis
+    AI-->>API: Return analysis (score, category, recommendation)
+    API->>DB: Update report with AI results
+    API->>WA: Send confirmation message
+    WA-->>User: WhatsApp notification
+    API-->>UI: Report submission confirmation
 ```
+
+## Database Schema
+
+```mermaid
+erDiagram
+    USERS {
+        string phone PK
+        string name
+        boolean active
+    }
+    REPORTS {
+        number id PK
+        number score
+        string category
+        string recommendation
+        number latitude
+        number longitude
+        string imageUrl
+        number createdAt
+    }
+    USERS ||..|{ REPORTS : submits
+```
+
+## Features
+
+- **Photo Submission**: Users can upload photos of cleanliness issues
+- **AI Analysis**: Automatic image processing to categorize issues and provide recommendations
+- **WhatsApp Integration**: Real-time notifications and updates via WhatsApp
+- **Location Tagging**: GPS coordinates for precise issue reporting
+- **Issue Tracking**: Categorization and scoring of reported issues
+
+## Tech Stack
+
+- **Frontend**: React 19 + TypeScript 6 + Vite
+- **Styling**: Tailwind CSS 4
+- **Backend**: Convex (serverless functions, database, real-time)
+- **AI Integration**: External AI service for image analysis
+- **Communication**: WhatsApp Business API
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- npm or yarn
+- Convex account
+- WhatsApp Business API access
+- AI service credentials
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd UrbanCleaner
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Configure environment variables
+```bash
+cp .env.example .env
+# Edit .env with your Convex URL and other secrets
+```
+
+4. Start development server
+```bash
+npm run dev
+```
+
+## Project Structure
+
+```mermaid
+flowchart TD
+    A[Root] --> B[src/]
+    A --> C[convex/]
+    A --> D[public/]
+    
+    B --> B1[main.tsx]
+    B --> B2[App.tsx]
+    B --> B3[index.css]
+    B --> B4[components/]
+    B --> B5[hooks/]
+    B --> B6[utils/]
+    
+    C --> C1[schema.ts]
+    C --> C2[reports.ts]
+    C --> C3[ai.ts]
+    C --> C4[whatsapp.ts]
+    C --> C5[_generated/]
+    
+    style A fill:#f9f,stroke:#333
+    style C fill:#bbf,stroke:#333
+```
+
+## Development Commands
+
+```bash
+npm run dev      # Start development server (http://localhost:5173)
+npm run build    # Build for production (tsc -b && vite build)
+npm run lint     # Run ESLint
+npm run preview  # Preview production build
+```
+
+## API Guidelines
+
+### Convex Functions
+
+- **Mutations**: Use `useMutation()` for creating/updating reports
+- **Actions**: Use `useAction()` for AI processing and WhatsApp messaging
+- **Queries**: Use `useQuery()` for retrieving reports and user data
+
+### Phone Number Format
+
+All phone numbers must follow Indonesian format:
+- Must start with `62`
+- Example: `628123456789`
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Last Updated
+
+April 29, 2026
