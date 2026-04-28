@@ -9,25 +9,30 @@ UrbanCleaner enables citizens to report cleanliness issues in their cities throu
 ## Architecture
 
 ```mermaid
-C4Context
-    title System Context Diagram for UrbanCleaner
+flowchart TB
+    subgraph UrbanCleanerSystem["UrbanCleaner System"]
+        direction TB
+        WebInterface[Web Interface<br/>React/Vite SPA]:::component
+        Backend[Backend<br/>Convex serverless functions]:::component
+        Database[(Database<br/>Stores reports and user data)]:::database
+    end
     
-    Person(user, "Citizen", "Reports cleanliness issues")
-    System_Boundary(b1, "UrbanCleaner System") {
-        System(ui, "Web Interface", "React/Vite SPA for submitting reports")
-        System(api, "Backend", "Convex serverless functions")
-        SystemDb(db, "Database", "Stores reports and user data")
-        System_Ext(ai, "AI Service", "Processes images and generates recommendations", technology="External AI")
-        System_Ext(whatsapp, "WhatsApp API", "Sends notifications", technology="WhatsApp Business API")
-    }
+    Citizen[Citizen]:::person
+    AIService[AI Service<br/>Processes images]:::external
+    WhatsApp[WhatsApp API<br/>Sends notifications]:::external
     
-    Rel(user, ui, "Submits reports with photos", "HTTPS")
-    Rel(ui, api, "Sends report data", "HTTPS")
-    Rel(api, db, "Stores/retrieves data", "Database")
-    Rel(api, ai, "Requests image processing", "HTTPS")
-    Rel(ai, api, "Returns analysis results", "HTTPS")
-    Rel(api, whatsapp, "Sends notifications", "HTTPS")
-    Rel(whatsapp, user, "Sends confirmation/update", "WhatsApp")
+    Citizen -->|Submits reports with photos| WebInterface
+    WebInterface -->|Sends report data| Backend
+    Backend -->|Stores/retrieves data| Database
+    Backend -->|Requests image processing| AIService
+    AIService -->|Returns analysis results| Backend
+    Backend -->|Sends notifications| WhatsApp
+    WhatsApp -->|Sends confirmation/update| Citizen
+    
+    classDef person fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef component fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef database fill:#bfb,stroke:#333,stroke-width:2px;
+    classDef external fill:#f99,stroke:#333,stroke-width:2px;
 ```
 
 ## Data Flow
