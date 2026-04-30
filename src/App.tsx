@@ -231,175 +231,400 @@ function App() {
     }
   };
 
+  const scoreColor = result
+    ? result.score >= 70 ? '#34d399' : result.score >= 40 ? '#fbbf24' : '#f87171'
+    : '#34d399';
+
+  const scoreGlow = result
+    ? result.score >= 70
+      ? '0 0 40px rgba(52,211,153,0.55)'
+      : result.score >= 40
+        ? '0 0 40px rgba(251,191,36,0.55)'
+        : '0 0 40px rgba(248,113,113,0.55)'
+    : 'none';
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-10 px-4 sm:px-6">
-      <div className="max-w-3xl w-full text-center space-y-3 mb-10">
-        <div className="flex justify-center mb-2">
-          <div className="bg-green-100 p-3 rounded-full text-green-600">
-            <Leaf size={32} />
-          </div>
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-800">UrbanClean AI</h1>
-        <p className="text-lg text-slate-600">Analisis Kebersihan Jalan & Lingkungan</p>
-        <div className="inline-block bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-full text-sm font-medium mt-4 shadow-sm">
-          🌍 SDG 11: Monitoring kebersihan kota berbasis AI
-        </div>
+    <div style={{ minHeight: '100vh', background: '#030a06', position: 'relative', overflowX: 'hidden' }}>
+
+      {/* Ambient orbs */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div className="orb" style={{
+          top: '-15%', left: '-10%',
+          width: '55vw', height: '55vw',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.13) 0%, transparent 65%)',
+          animationDelay: '0s',
+        }} />
+        <div className="orb" style={{
+          bottom: '-20%', right: '-10%',
+          width: '50vw', height: '50vw',
+          background: 'radial-gradient(circle, rgba(5,150,105,0.09) 0%, transparent 65%)',
+          animationDelay: '-7s',
+        }} />
+        <div className="orb" style={{
+          top: '45%', left: '35%',
+          width: '35vw', height: '35vw',
+          background: 'radial-gradient(circle, rgba(52,211,153,0.05) 0%, transparent 70%)',
+          animationDelay: '-13s',
+        }} />
       </div>
 
-      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-          <h2 className="text-xl font-semibold mb-4 text-slate-800">1. Upload Gambar Jalan</h2>
-          
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
-              ${imagePreview ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:border-green-400 hover:bg-slate-50'}
-            `}
-          >
-            {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg shadow-sm" />
-            ) : (
-              <div className="flex flex-col items-center text-slate-500 py-10">
-                <UploadCloud size={48} className="text-slate-400 mb-4" />
-                <p className="font-medium">Klik atau Drag & Drop gambar</p>
-                <p className="text-sm mt-2 text-slate-400">PNG, JPG format</p>
-              </div>
-            )}
-            <input 
-              type="file" 
-              className="hidden" 
-              ref={fileInputRef} 
-              accept="image/*" 
-              onChange={handleImageChange} 
-            />
-          </div>
+      {/* Noise texture overlay */}
+      <div style={{
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '200px 200px',
+        opacity: 0.4,
+      }} />
 
-          <button
-            onClick={handleAnalyze}
-            disabled={!imagePreview || isAnalyzing}
-            className="mt-6 w-full py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isAnalyzing ? (
-              <><Loader2 className="animate-spin" size={20} /> Menganalisis...</>
-            ) : (
-              <><CheckCircle size={20} /> Analisis Kebersihan</>
-            )}
-          </button>
+      {/* Header */}
+      <header style={{ position: 'relative', zIndex: 10, paddingTop: '80px', paddingBottom: '56px', textAlign: 'center', padding: '80px 24px 56px' }}>
 
-          {imagePreview && (
-            <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-2 text-sm">
-                <Navigation size={16} className={locationStatus === 'loading' ? 'animate-spin text-blue-500' : locationStatus === 'found' ? 'text-green-500' : 'text-slate-400'} />
-                {locationStatus === 'loading' && <span className="text-blue-600">Mendapatkan lokasi...</span>}
+        {/* Icon mark */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: '54px', height: '54px', borderRadius: '16px', marginBottom: '24px',
+          background: 'linear-gradient(135deg, rgba(5,150,105,0.6) 0%, rgba(16,185,129,0.4) 100%)',
+          border: '1px solid rgba(52,211,153,0.3)',
+          boxShadow: '0 0 32px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
+        }}>
+          <Leaf size={22} style={{ color: '#6ee7b7' }} />
+        </div>
+
+        {/* SDG pill */}
+        <div style={{ marginBottom: '20px' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '6px 14px', borderRadius: '999px',
+            fontSize: '10px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: '#6ee7b7',
+            background: 'rgba(16,185,129,0.08)',
+            border: '1px solid rgba(16,185,129,0.2)',
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+            SDG 11 — Kota Berkelanjutan
+          </span>
+        </div>
+
+        {/* Headline */}
+        <h1 className="gradient-text" style={{
+          fontSize: 'clamp(2.8rem, 7vw, 5.2rem)',
+          fontWeight: 800,
+          letterSpacing: '-0.04em',
+          lineHeight: 1.02,
+          marginBottom: '16px',
+        }}>
+          UrbanClean AI
+        </h1>
+
+        <p style={{
+          color: 'rgba(255,255,255,0.38)',
+          fontSize: '16px',
+          fontWeight: 300,
+          maxWidth: '380px',
+          margin: '0 auto',
+          lineHeight: 1.65,
+        }}>
+          Analisis kebersihan jalan &amp; lingkungan dengan kecerdasan buatan
+        </p>
+      </header>
+
+      {/* Cards grid */}
+      <main style={{ position: 'relative', zIndex: 10, maxWidth: '900px', margin: '0 auto', padding: '0 16px 96px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
+
+          {/* ── Upload card ── */}
+          <div className="glass-card" style={{ padding: '28px', display: 'flex', flexDirection: 'column' }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
+              <span className="step-badge">1</span>
+              <h2 style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                Unggah Gambar
+              </h2>
+            </div>
+
+            {/* Drop zone */}
+            <div
+              className={`upload-zone${imagePreview ? ' active' : ''}`}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '216px', objectFit: 'cover', display: 'block' }} />
+              ) : (
+                <div style={{ padding: '52px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.06)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginBottom: '12px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <UploadCloud size={19} style={{ color: 'rgba(255,255,255,0.28)' }} />
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', fontWeight: 500, marginBottom: '4px' }}>
+                    Klik untuk unggah gambar
+                  </p>
+                  <p style={{ color: 'rgba(255,255,255,0.22)', fontSize: '11px' }}>PNG · JPG</p>
+                </div>
+              )}
+              <input type="file" className="hidden" ref={fileInputRef} accept="image/*" onChange={handleImageChange} />
+            </div>
+
+            {/* Location row */}
+            {imagePreview && locationStatus !== 'idle' && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {locationStatus === 'loading' && (
+                  <>
+                    <Loader2 size={11} className="animate-spin" style={{ color: 'rgba(255,255,255,0.25)' }} />
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px' }}>Mendeteksi lokasi...</span>
+                  </>
+                )}
                 {locationStatus === 'found' && location && (
-                  <span className="text-green-600 truncate">
-                    📍 {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
-                  </span>
-                )}
-                {locationStatus === 'not-found' && <span className="text-amber-600">⚠️ Lokasi tidak tersedia</span>}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex-grow">
-            <h2 className="text-xl font-semibold mb-4 text-slate-800">2. Hasil Analisis AI</h2>
-            
-            {!result ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12">
-                <AlertTriangle size={48} className="mb-4 opacity-50" />
-                <p>Belum ada analisis. Upload dan klik tombol analisis.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-slate-600">Skor Kebersihan</span>
-                    <span className={`text-2xl font-bold ${result.score >= 70 ? 'text-green-600' : result.score >= 40 ? 'text-amber-500' : 'text-red-600'}`}>
-                      {result.score}%
+                  <>
+                    <MapPin size={11} style={{ color: '#34d399', flexShrink: 0 }} />
+                    <span style={{ color: '#6ee7b7', fontSize: '11px' }}>
+                      {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
                     </span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-3">
-                    <div 
-                      className={`h-3 rounded-full ${result.score >= 70 ? 'bg-green-500' : result.score >= 40 ? 'bg-amber-400' : 'bg-red-500'}`} 
-                      style={{ width: `${result.score}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Kategori</span>
-                    <span className="font-semibold text-slate-800 capitalize">{result.category}</span>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <span className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Status</span>
-                    <span className="font-semibold text-slate-800">
-                      {result.score < 40 ? '🚨 Kritis' : '✅ Aman'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-900">
-                  <span className="block text-xs font-semibold uppercase tracking-wider mb-2 text-blue-700">Rekomendasi AI</span>
-                  <p className="text-sm leading-relaxed">{result.recommendation}</p>
-                </div>
-
-                {location && (
-                  <a 
-                    href={`https://maps.google.com/?q=${location.latitude},${location.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
-                  >
-                    <MapPin size={16} />
-                    <span className="text-sm">Buka di Google Maps</span>
-                  </a>
+                  </>
                 )}
-
-                {isAutoSent && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-                    ✅ Notifikasi otomatis dikirim ke {location ? 'petugas + lokasi' : 'petugas'}
-                  </div>
+                {locationStatus === 'not-found' && (
+                  <>
+                    <Navigation size={11} style={{ color: '#fbbf24', flexShrink: 0 }} />
+                    <span style={{ color: '#fbbf24', fontSize: '11px' }}>Lokasi tidak tersedia</span>
+                  </>
                 )}
               </div>
             )}
+
+            {/* Analyze button */}
+            <button
+              onClick={handleAnalyze}
+              disabled={!imagePreview || isAnalyzing}
+              className={`btn-glow${(!imagePreview || isAnalyzing) ? '' : ''}`}
+              style={{
+                marginTop: '20px',
+                width: '100%',
+                padding: '14px',
+                borderRadius: '14px',
+                border: 'none',
+                cursor: (!imagePreview || isAnalyzing) ? 'not-allowed' : 'pointer',
+                opacity: (!imagePreview || isAnalyzing) ? 0.38 : 1,
+                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {isAnalyzing
+                ? <><Loader2 className="animate-spin" size={15} /> Menganalisis...</>
+                : <><CheckCircle size={15} /> Analisis Kebersihan</>
+              }
+            </button>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h2 className="text-xl font-semibold mb-4 text-slate-800">3. Kirim Manual</h2>
-            <div className="flex flex-col gap-3">
-              <label className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                <Phone size={16} /> Nomor WhatsApp (Format: 628xxx)
-              </label>
-              <input
-                type="text"
-                placeholder="628123456789"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-              />
-              
-              <button
-                onClick={handleManualSend}
-                disabled={!result || !phone || isSending || sendSuccess}
-                className={`mt-2 w-full py-3.5 rounded-xl font-medium shadow-sm flex items-center justify-center gap-2 transition-all
-                  ${!result ? 'bg-slate-100 text-slate-400' : 'bg-slate-800 hover:bg-slate-900 text-white'}
-                  disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {isSending ? (
-                  <><Loader2 className="animate-spin" size={20} /> Mengirim...</>
-                ) : sendSuccess ? (
-                  <><CheckCircle size={20} className="text-green-400" /> Terkirim!</>
-                ) : (
-                  <><Send size={20} /> Kirim WhatsApp</>
-                )}
-              </button>
+          {/* Right column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* ── Result card ── */}
+            <div className="glass-card" style={{ padding: '28px', flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
+                <span className="step-badge">2</span>
+                <h2 style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                  Hasil Analisis
+                </h2>
+              </div>
+
+              {!result ? (
+                <div style={{ padding: '44px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{
+                    width: '52px', height: '52px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginBottom: '14px',
+                  }}>
+                    <AlertTriangle size={19} style={{ color: 'rgba(255,255,255,0.14)' }} />
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.22)', fontSize: '13px', textAlign: 'center', lineHeight: 1.65 }}>
+                    Unggah gambar lalu klik<br />tombol analisis untuk memulai
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+                  {/* Score */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                    <div>
+                      <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '4px' }}>
+                        Skor Kebersihan
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                        <span style={{
+                          fontSize: '4.2rem', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1,
+                          color: scoreColor,
+                          textShadow: scoreGlow,
+                        }}>
+                          {result.score}
+                        </span>
+                        <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: '15px', fontWeight: 300, marginBottom: '6px' }}>/100</span>
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: '5px 12px', borderRadius: '999px',
+                      fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                      color: scoreColor,
+                      background: `${scoreColor}18`,
+                      border: `1px solid ${scoreColor}35`,
+                    }}>
+                      {result.score < 40 ? 'Kritis' : result.score >= 70 ? 'Bersih' : 'Sedang'}
+                    </span>
+                  </div>
+
+                  {/* Glowing bar */}
+                  <div style={{ height: '3px', background: 'rgba(255,255,255,0.07)', borderRadius: '999px', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: '999px',
+                      width: `${result.score}%`,
+                      background: result.score >= 70
+                        ? 'linear-gradient(90deg, #059669, #34d399)'
+                        : result.score >= 40
+                          ? 'linear-gradient(90deg, #d97706, #fbbf24)'
+                          : 'linear-gradient(90deg, #dc2626, #f87171)',
+                      boxShadow: `0 0 10px ${scoreColor}90`,
+                      transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)',
+                    }} />
+                  </div>
+
+                  {/* Category */}
+                  <div style={{
+                    padding: '14px 16px',
+                    background: 'rgba(255,255,255,0.04)',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                  }}>
+                    <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '5px' }}>
+                      Kategori
+                    </p>
+                    <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: '14px', fontWeight: 600, textTransform: 'capitalize' }}>
+                      {result.category}
+                    </p>
+                  </div>
+
+                  {/* Recommendation */}
+                  <div style={{
+                    padding: '14px 16px',
+                    background: 'rgba(16,185,129,0.07)',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(16,185,129,0.18)',
+                  }}>
+                    <p style={{ color: '#6ee7b7', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                      Rekomendasi
+                    </p>
+                    <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', lineHeight: 1.65 }}>
+                      {result.recommendation}
+                    </p>
+                  </div>
+
+                  {location && (
+                    <a
+                      href={`https://maps.google.com/?q=${location.latitude},${location.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.28)', fontSize: '12px', textDecoration: 'none', transition: 'color 0.2s' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.28)')}
+                    >
+                      <MapPin size={11} />
+                      <span>Lihat di Google Maps</span>
+                    </a>
+                  )}
+
+                  {isAutoSent && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '10px 14px', borderRadius: '10px',
+                      background: 'rgba(52,211,153,0.08)',
+                      border: '1px solid rgba(52,211,153,0.2)',
+                    }}>
+                      <CheckCircle size={13} style={{ color: '#34d399', flexShrink: 0 }} />
+                      <span style={{ color: '#6ee7b7', fontSize: '12px' }}>Notifikasi otomatis terkirim ke petugas</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* ── Send card ── */}
+            <div className="glass-card" style={{ padding: '28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                <span className="step-badge">3</span>
+                <h2 style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                  Kirim Manual
+                </h2>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={13} style={{
+                    position: 'absolute', left: '13px', top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'rgba(255,255,255,0.25)',
+                    pointerEvents: 'none',
+                  }} />
+                  <input
+                    type="text"
+                    placeholder="628123456789"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    className="dark-input"
+                  />
+                </div>
+
+                <button
+                  onClick={handleManualSend}
+                  disabled={!result || !phone || isSending || sendSuccess}
+                  style={{
+                    width: '100%',
+                    padding: '13px',
+                    borderRadius: '13px',
+                    border: sendSuccess ? '1px solid rgba(52,211,153,0.3)' : 'none',
+                    cursor: (!result || !phone || isSending || sendSuccess) ? 'not-allowed' : 'pointer',
+                    opacity: (!result || !phone) ? 0.38 : 1,
+                    background: sendSuccess
+                      ? 'rgba(52,211,153,0.1)'
+                      : (!result || !phone)
+                        ? 'rgba(255,255,255,0.05)'
+                        : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                    boxShadow: (!result || !phone || sendSuccess) ? 'none' : '0 0 20px rgba(16,185,129,0.3)',
+                    color: sendSuccess ? '#6ee7b7' : (!result || !phone) ? 'rgba(255,255,255,0.25)' : '#fff',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'opacity 0.2s, box-shadow 0.2s',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {isSending
+                    ? <><Loader2 className="animate-spin" size={14} /> Mengirim...</>
+                    : sendSuccess
+                      ? <><CheckCircle size={14} /> Terkirim</>
+                      : <><Send size={14} /> Kirim via WhatsApp</>
+                  }
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
