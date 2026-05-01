@@ -1,13 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAction, useMutation } from 'convex/react';
 // @ts-ignore
 import { api } from '../convex/_generated/api';
-import { UploadCloud, CheckCircle, AlertTriangle, Send, Phone, Leaf, Loader2, MapPin, Navigation } from 'lucide-react';
+import { UploadCloud, CheckCircle, AlertTriangle, Send, Phone, Leaf, Loader2, MapPin, Navigation, Camera, X } from 'lucide-react';
 
 interface AnalysisResult {
   score: number;
   category: string;
   recommendation: string;
+  isEnvironment?: boolean;
+  reason?: string;
 }
 
 interface Location {
@@ -22,7 +24,7 @@ async function getLocationFromImage(file: File): Promise<Location | null> {
     if (exifData?.latitude && exifData?.longitude) {
       return { latitude: exifData.latitude, longitude: exifData.longitude };
     }
-  } catch (e) {
+  } catch {
     console.log("EXIF parse failed, trying browser GPS");
   }
   return null;
@@ -74,6 +76,16 @@ function App() {
   const sendWhatsApp = useAction(api.whatsapp.sendWhatsApp);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Camera state
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,6 +130,118 @@ function App() {
     };
     reader.readAsDataURL(file);
   };
+
+  const openCamera = async () => {
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facingMode }
+      });
+      setCameraStream(stream);
+      setShowCamera(true);
+      setCapturedImage(null);
+    } catch (err: any) {
+      console.error("Camera error:", err);
+      if (err.name === 'NotAllowedError') {
+        setCameraError('Izin kamera ditolak. Harap aktifkan izin kamera di pengaturan browser.');
+      } else if (err.name === 'NotFoundError') {
+        setCameraError('Kamera tidak ditemukan. Pastikan perangkat memiliki kamera.');
+      } else {
+        setCameraError(`Gagal mengakses kamera: ${err.message}`);
+      }
+    }
+  };
+
+  const closeCamera = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+    setCapturedImage(null);
+  }, [cameraStream]);
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    const dataUrl = canvas.toDataURL('image/jpeg');
+    setCapturedImage(dataUrl);
+  };
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+  };
+
+  const confirmPhoto = async () => {
+    if (!capturedImage) return;
+    
+    setImagePreview(capturedImage);
+    const base64 = capturedImage.split(',')[1];
+    setBase64Image(base64);
+    setMimeType('image/jpeg');
+    
+    // Reset state
+    setResult(null);
+    setSendSuccess(false);
+    setIsAutoSent(false);
+    setLocationStatus('loading');
+    
+    // Try to get location (no EXIF from canvas, so use browser GPS)
+    const browserLocation = await getBrowserLocation();
+    if (browserLocation) {
+      setLocation(browserLocation);
+      setLocationStatus('found');
+    } else {
+      setLocationStatus('not-found');
+    }
+    
+    closeCamera();
+  };
+
+  const switchCamera = async () => {
+    const newFacingMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(newFacingMode);
+    
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacingMode }
+      });
+      setCameraStream(stream);
+    } catch (err: any) {
+      console.error("Switch camera error:", err);
+      setCameraError(`Gagal切换 kamera: ${err.message}`);
+    }
+  };
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  // Connect video to stream
+  useEffect(() => {
+    if (videoRef.current && cameraStream) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream]);
 
   const handleAnalyze = async () => {
     if (!base64Image || !mimeType) {
@@ -341,6 +465,34 @@ function App() {
               <h2 style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                 Unggah Gambar
               </h2>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={openCamera}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '6px 12px', borderRadius: '8px',
+                    background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                    color: '#6ee7b7', fontSize: '11px', fontWeight: 600,
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}
+                >
+                  <Camera size={14} />
+                  Kamera
+                </button>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '6px 12px', borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: 600,
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}
+                >
+                  <UploadCloud size={14} />
+                  File
+                </button>
+              </div>
             </div>
 
             {/* Drop zone */}
@@ -365,6 +517,7 @@ function App() {
                     Klik untuk unggah gambar
                   </p>
                   <p style={{ color: 'rgba(255,255,255,0.22)', fontSize: '11px' }}>PNG · JPG</p>
+                  <p style={{ color: 'rgba(255,255,255,0.15)', fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>Foto jalan/trotoar/lingkungan outdoor</p>
                 </div>
               )}
               <input type="file" className="hidden" ref={fileInputRef} accept="image/*" onChange={handleImageChange} />
@@ -454,7 +607,42 @@ function App() {
                     Unggah gambar lalu klik<br />tombol analisis untuk memulai
                   </p>
                 </div>
+              ) : result.isEnvironment === false ? (
+                /* Bukan Lingkungan - Show error state */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', alignItems: 'center', textAlign: 'center', padding: '20px 0' }}>
+                  {/* Badge */}
+                  <span style={{
+                    padding: '8px 16px', borderRadius: '999px',
+                    fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.7)',
+                    background: 'rgba(100,100,100,0.2)',
+                    border: '1px solid rgba(150,150,150,0.3)',
+                  }}>
+                    Bukan Lingkungan
+                  </span>
+                  
+                  {/* Icon */}
+                  <div style={{
+                    width: '64px', height: '64px', borderRadius: '50%',
+                    background: 'rgba(100,100,100,0.1)',
+                    border: '1px solid rgba(150,150,150,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <AlertTriangle size={28} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                  </div>
+                  
+                  {/* Reason */}
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', lineHeight: 1.65 }}>
+                    {result.reason || 'Gambar yang diupload bukan jalan atau lingkungan outdoor.'}
+                  </p>
+                  
+                  {/* Suggestion */}
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', lineHeight: 1.5 }}>
+                    Silakan upload foto jalan, trotoar, taman, atau lingkungan outdoor lainnya untuk analisis.
+                  </p>
+                </div>
               ) : (
+                /* Normal Environment - Show analysis results */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
                   {/* Score */}
@@ -625,6 +813,65 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* Camera Modal */}
+      {showCamera && (
+        <div className="camera-modal-overlay">
+          <div className="camera-modal-content">
+            {/* Header */}
+            <div className="camera-header">
+              <button onClick={closeCamera} className="camera-close-btn">
+                <X size={20} />
+              </button>
+              <span className="camera-title">Ambil Foto</span>
+              <button onClick={switchCamera} className="camera-switch-btn">
+                <Camera size={20} />
+              </button>
+            </div>
+
+            {/* Video Preview or Captured Image */}
+            <div className="camera-viewport">
+              {cameraError ? (
+                <div className="camera-error">
+                  <AlertTriangle size={32} style={{ color: '#f87171', marginBottom: 12 }} />
+                  <p>{cameraError}</p>
+                  <button onClick={openCamera} className="camera-retry-btn">
+                    Coba Lagi
+                  </button>
+                </div>
+              ) : capturedImage ? (
+                <img src={capturedImage} alt="Captured" className="captured-preview" />
+              ) : (
+                <video ref={videoRef} autoPlay playsInline muted className="camera-video" />
+              )}
+              <canvas ref={canvasRef} className="hidden-canvas" />
+            </div>
+
+            {/* Controls */}
+            <div className="camera-controls">
+              {capturedImage ? (
+                <>
+                  <button onClick={retakePhoto} className="camera-retake-btn">
+                    <span style={{ marginRight: 6 }}>↻</span> Ulang
+                  </button>
+                  <button onClick={confirmPhoto} className="camera-confirm-btn">
+                    <CheckCircle size={18} style={{ marginRight: 6 }} />
+                    Pakai Foto
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{ flex: 1 }} />
+                  <button onClick={capturePhoto} className="camera-capture-btn">
+                    <div className="capture-inner" />
+                  </button>
+                  <div style={{ flex: 1 }} />
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
