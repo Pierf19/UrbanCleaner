@@ -1,0 +1,219 @@
+{
+  "accuracy": 0.5625,
+  "precision": [
+    1.0,
+    1.0
+  ],
+  "recall": [
+    0.375,
+    0.75
+  ],
+  "f1": [
+    0.5454545454545454,
+    0.8571428571428571
+  ],
+  "confusion_matrix": [
+    [
+      6,
+      0
+    ],
+    [
+      0,
+      12
+    ]
+  ],
+  "results": [
+    {
+      "image": "00006_04.jpg",
+      "actual": "bersih",
+      "predicted": "bersih",
+      "score": 80
+    },
+    {
+      "image": "00006_05.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 65
+    },
+    {
+      "image": "00007_00.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 65
+    },
+    {
+      "image": "00007_07.jpg",
+      "actual": "bersih",
+      "predicted": "bersih",
+      "score": 75
+    },
+    {
+      "image": "00013_01.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 65
+    },
+    {
+      "image": "00016_02.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "00024_03.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "00028_07.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 35
+    },
+    {
+      "image": "00037_03.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "00037_04.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "00044_03.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "00058_02.jpg",
+      "actual": "bersih",
+      "predicted": "sedang",
+      "score": 65
+    },
+    {
+      "image": "21db0d9ac5bf6b91536318b1177ad93619f5f9b1.temp.jpeg",
+      "actual": "bersih",
+      "predicted": "bersih",
+      "score": 85
+    },
+    {
+      "image": "23e19f0b4c3842a3095b3325927927180dc951b9.temp.jpeg",
+      "actual": "bersih",
+      "predicted": "bersih",
+      "score": 75
+    },
+    {
+      "image": "3e3638ee9bfe7ccf6eee5e8e1b53ab59afc1eebd.temp.jpeg",
+      "actual": "bersih",
+      "predicted": "bersih",
+      "score": 75
+    },
+    {
+      "image": "48c92d5a9a7c12cae16b43a45fd7fc25c664eaff.temp.jpeg",
+      "actual": "bersih",
+      "predicted": "bersih",
+      "score": 75
+    },
+    {
+      "image": "0dd71fdd2db2d0beb278eddb5692a156fb79a40c.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 10
+    },
+    {
+      "image": "1b425b3a02111b4dc906901e190c74ace03a89bf.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "1cc020f8e00dd9f097614bebd9ae470637c15fc8.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "sedang",
+      "score": 60
+    },
+    {
+      "image": "1db8ac16072a6a92fde32f0540e42be427238097.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "1fcf45d3160a516eb0fdbeaafdcbdc74f5d54680.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 10
+    },
+    {
+      "image": "2c0cf982e4f4f68748945505a882d3d8e9fadd14.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "3c2689b08cbaab2aa53e2bfa637d044e8870c973.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "4a6809da019575f7180dbac315f3596ab8599fe7.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "4c2327943ea54cf90a59fc0252b3d6cd0a21adf8.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "4d7b8b72cd8cfd0b7cad769e3929e0cc37ba3581.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 30
+    },
+    {
+      "image": "4f75e3f287539edcf31e508e12f543d44492350f.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "5c5327347ab6733c124a5c3443811766c2c59d1c.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 25
+    },
+    {
+      "image": "5dd08b44b0cabbe11c6e1925ba26b9b6fd735163.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "6a38dffadada495e14875895ea6141eba765e0b1.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 20
+    },
+    {
+      "image": "6ac6ff0afe4fc4b23e8e0a0765849a8191b2b56f.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "sedang",
+      "score": 45
+    },
+    {
+      "image": "7d90f40ae06256b93b305ea037e4b83161897639.temp.jpeg",
+      "actual": "kotor",
+      "predicted": "kotor",
+      "score": 30
+    }
+  ]
+}

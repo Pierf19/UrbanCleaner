@@ -177,6 +177,56 @@ All phone numbers must follow Indonesian format:
 - Must start with `62`
 - Example: `628123456789`
 
+## Model Evaluation
+
+### Test Results
+- **Test Data**: 32 images (16 clean + 16 dirty)
+- **Few-Shot Examples**: 7 images (4 clean + 3 dirty)
+- **Accuracy**: 56.25%
+- **Precision**: 1.00 (bersih) / 1.00 (kotor)
+- **Recall**: 0.38 (bersih) / 0.75 (kotor)
+- **F1-Score**: 0.55 (bersih) / 0.86 (kotor)
+
+### Confusion Matrix
+|        | Predicted Bersih | Predicted Kotor |
+|--------|-----------------|-----------------|
+| Actual Bersih | 6 | 0 |
+| Actual Kotor  | 0 | 12 |
+
+**Note**: Model tends to classify borderline cases as "sedang" instead of extreme categories.
+
+## Testing the Model
+
+Run evaluation script:
+```bash
+python scripts/test_model_fast.py
+```
+
+This will:
+- Load 7 few-shot examples (4 clean + 3 dirty)
+- Test on 32 images from `dataset_training/test/`
+- Output metrics to `scripts/output/metrics.json`
+- Generate visualization graphs in `scripts/output/evaluation_results.png`
+
+## Few-Shot Learning
+
+UrbanCleaner uses **Mistral Pixtral-12b-2409** with few-shot prompting:
+
+- **API Limit**: Maximum 8 images per request (7 examples + 1 test image)
+- **Examples Used**: 4 clean + 3 dirty images
+- **Approach**: Model learns from examples without fine-tuning
+
+**Benefits**:
+- No model training required
+- Flexible category definitions
+- Quick iteration on examples
+
+**Categories**:
+- `bersih`: Score 70-100
+- `sedang`: Score 40-69
+- `kotor`: Score 0-39
+
+
 ## Contributing
 
 1. Fork the repository
@@ -191,4 +241,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Last Updated
 
-April 29, 2026
+May 1, 2026
