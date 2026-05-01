@@ -226,25 +226,6 @@ UrbanCleaner uses **Mistral Pixtral-12b-2409** with few-shot prompting:
 - `sedang`: Score 40-69
 - `kotor`: Score 0-39
 
-## Unused Files
-
-The following files are not used in the project and can be deleted:
-
-```
-scripts/
-├── test_model.py           # Broken (truncated base64)
-├── new_examples.txt        # Intermediate file (581KB)
-├── prompt_examples.json    # Intermediate file (469KB)
-├── training_data.jsonl     # Intermediate file (2.8MB)
-├── generate_examples.cjs   # Duplicate of .py
-├── add_examples_to_ai.cjs  # Helper script
-├── reduce_examples.cjs     # Helper script
-├── update_ai_examples.cjs  # Helper script
-├── update_ai_ts.cjs        # Duplicate of .py
-├── upload_and_train.py    # Not used (for model training)
-├── check_status.py        # Not used (for model training)
-└── prepare_data.py        # Not used (for model training)
-```
 
 ## Contributing
 
